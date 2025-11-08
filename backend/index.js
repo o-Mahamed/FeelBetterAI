@@ -7,17 +7,21 @@ dotenv.config();
 
 const app = express();
 
-// ✅ CORS middleware — must be before any routes
+// ✅ CORS middleware — handles all origins and preflight
 app.use(cors());
-
 app.use(express.json());
+
+// ✅ Test route to confirm backend is reachable
+app.get('/ping', (req, res) => {
+  res.send('pong');
+});
 
 // ✅ OpenAI client
 const openai = new OpenAI({
   apiKey: process.env.OPENAI_API_KEY,
 });
 
-// ✅ POST route
+// ✅ Chat route
 app.post('/chat', async (req, res) => {
   try {
     const { message } = req.body;
@@ -37,7 +41,7 @@ app.post('/chat', async (req, res) => {
   }
 });
 
-// ✅ Start server
-app.listen(5000, () => {
-  console.log('✅ Backend running on http://localhost:5000');
+// ✅ Start server on port 4000
+app.listen(4000, () => {
+  console.log('✅ Backend running on http://localhost:4000');
 });
