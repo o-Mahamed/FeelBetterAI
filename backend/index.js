@@ -41,7 +41,8 @@ app.post('/chat', async (req, res) => {
   }
 });
 
-// ✅ Start server on port 4000
-app.listen(4000, () => {
-  console.log('✅ Backend running on http://localhost:4000');
+// ✅ Use Render’s assigned port OR fallback to 4000 locally
+const PORT = process.env.PORT || 4000;
+app.listen(PORT, () => {
+  console.log(`✅ Backend running on port ${PORT}`);
 });

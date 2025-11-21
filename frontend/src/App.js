@@ -3,6 +3,7 @@ import axios from 'axios';
 import './App.css';
 
 function App() {
+  const API_URL = process.env.REACT_APP_API_URL;
   const [userInput, setUserInput] = useState('');
   const [chatHistory, setChatHistory] = useState([]);
   const [moodHistory, setMoodHistory] = useState([]);
@@ -12,6 +13,8 @@ function App() {
   const [darkMode, setDarkMode] = useState(false);
   const [listening, setListening] = useState(false);
   const [hasStarted, setHasStarted] = useState(false);
+
+  
 
   const moodEmoji = {
     happy: '😄',
@@ -103,35 +106,39 @@ function App() {
   };
 
   const sendMessage = async () => {
-    if (!userInput.trim()) return;
+  if (!userInput.trim()) return;
 
-    if (!hasStarted) setHasStarted(true);
+  if (!hasStarted) setHasStarted(true);
 
-    const mood = detectMood(userInput);
-    setMoodHistory(prev => [...prev, { mood, time: new Date().toLocaleTimeString() }]);
-    setCurrentMood(mood);
+  const mood = detectMood(userInput);
+  setMoodHistory(prev => [...prev, { mood, time: new Date().toLocaleTimeString() }]);
+  setCurrentMood(mood);
 
-    const newMessage = { sender: 'user', text: userInput };
-    setChatHistory(prev => [...prev, newMessage]);
+  const newMessage = { sender: 'user', text: userInput };
+  setChatHistory(prev => [...prev, newMessage]);
 
-    try {
-      const res = await axios.post(
-        'http://localhost:4000/chat',
-        { message: userInput },
-        { headers: { 'Content-Type': 'application/json' } }
-      );
+  try {
+    // Use environment variable instead of hardcoded localhost
+    const API_URL = process.env.REACT_APP_API_URL || 'http://localhost:4000';
 
-      const botReply = { sender: 'bot', text: res.data.reply };
-      setChatHistory(prev => [...prev, botReply]);
-      speakReply(res.data.reply);
-    } catch (error) {
-      console.error('Error sending message:', error);
-      const errorReply = { sender: 'bot', text: 'Something went wrong.' };
-      setChatHistory(prev => [...prev, errorReply]);
-    }
+    const res = await axios.post(
+      `${API_URL}/chat`,
+      { message: userInput },
+      { headers: { 'Content-Type': 'application/json' } }
+    );
 
-    setUserInput('');
-  };
+    const botReply = { sender: 'bot', text: res.data.reply };
+    setChatHistory(prev => [...prev, botReply]);
+    speakReply(res.data.reply);
+  } catch (error) {
+    console.error('Error sending message:', error);
+    const errorReply = { sender: 'bot', text: 'Something went wrong.' };
+    setChatHistory(prev => [...prev, errorReply]);
+  }
+
+  setUserInput('');
+};
+
 
   const handleKeyPress = (e) => {
     if (e.key === 'Enter' && !e.shiftKey) {
