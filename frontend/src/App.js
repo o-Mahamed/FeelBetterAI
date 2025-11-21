@@ -116,13 +116,21 @@ function App() {
   if (!userInput.trim()) return;
   if (!hasStarted) setHasStarted(true);
 
-  const mood = detectMood(userInput);
+  // ✅ Save the message, then clear the input box right away
+  const messageToSend = userInput;
+  setUserInput(''); // clears textarea instantly
+
+  // Detect mood
+  const mood = detectMood(messageToSend);
   setMoodHistory(prev => [...prev, { mood, time: new Date().toLocaleTimeString() }]);
   setCurrentMood(mood);
 
+  // ✅ Add user's message to chat window immediately
+  setChatHistory(prev => [...prev, { sender: 'user', text: messageToSend }]);
+
   try {
     const API_URL = process.env.REACT_APP_API_URL || 'http://localhost:4000';
-    const res = await axios.post(`${API_URL}/chat`, { message: userInput });
+    const res = await axios.post(`${API_URL}/chat`, { message: messageToSend });
 
     const botReply = { sender: 'bot', text: res.data.reply };
     setChatHistory(prev => [...prev, botReply]);
@@ -135,9 +143,9 @@ function App() {
     const errorReply = { sender: 'bot', text: 'Something went wrong.' };
     setChatHistory(prev => [...prev, errorReply]);
   }
-
-  setUserInput('');
 };
+
+
 
 
   const handleVoiceInput = () => {
