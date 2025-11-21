@@ -7,7 +7,7 @@ function App() {
   const [userInput, setUserInput] = useState('');
   const [chatHistory, setChatHistory] = useState([]);
   const [moodHistory, setMoodHistory] = useState([]);
-  const [voiceEnabled, setVoiceEnabled] = useState(true);
+  const [voiceEnabled, setVoiceEnabled] = useState(false);
   const [showMoreResources, setShowMoreResources] = useState(false);
   const [currentMood, setCurrentMood] = useState('neutral');
   const [darkMode, setDarkMode] = useState(false);
@@ -26,6 +26,13 @@ function App() {
     stressed: '😣',
     hopeful: '🌟',
     neutral: '🔍',
+  };
+
+  const handleKeyPress = (event) => {
+    if (event.key === 'Enter' && !event.shiftKey) {
+      event.preventDefault();
+      sendMessage();
+    }
   };
 
   const detectMood = (text) => {
@@ -107,29 +114,22 @@ function App() {
 
   const sendMessage = async () => {
   if (!userInput.trim()) return;
-
   if (!hasStarted) setHasStarted(true);
 
   const mood = detectMood(userInput);
   setMoodHistory(prev => [...prev, { mood, time: new Date().toLocaleTimeString() }]);
   setCurrentMood(mood);
 
-  const newMessage = { sender: 'user', text: userInput };
-  setChatHistory(prev => [...prev, newMessage]);
-
   try {
-    // Use environment variable instead of hardcoded localhost
     const API_URL = process.env.REACT_APP_API_URL || 'http://localhost:4000';
-
-    const res = await axios.post(
-      `${API_URL}/chat`,
-      { message: userInput },
-      { headers: { 'Content-Type': 'application/json' } }
-    );
+    const res = await axios.post(`${API_URL}/chat`, { message: userInput });
 
     const botReply = { sender: 'bot', text: res.data.reply };
     setChatHistory(prev => [...prev, botReply]);
-    speakReply(res.data.reply);
+
+    if (voiceEnabled) {
+      speakReply(res.data.reply);
+    }
   } catch (error) {
     console.error('Error sending message:', error);
     const errorReply = { sender: 'bot', text: 'Something went wrong.' };
@@ -139,13 +139,6 @@ function App() {
   setUserInput('');
 };
 
-
-  const handleKeyPress = (e) => {
-    if (e.key === 'Enter' && !e.shiftKey) {
-      e.preventDefault();
-      sendMessage();
-    }
-  };
 
   const handleVoiceInput = () => {
     const SpeechRecognition = window.SpeechRecognition || window.webkitSpeechRecognition;
